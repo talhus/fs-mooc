@@ -31,10 +31,14 @@ const Content = ({ parts }) => {
 
 //total
 const Total = ({ parts }) => {
+  const initialValue = 0;
   const totalExercises = parts.map((part) => part.exercises);
   return (
     <p>
-      <b>Number of exercises {totalExercises.reduce((a, b) => a + b)}</b>
+      <b>
+        Number of exercises{" "}
+        {totalExercises.reduce((a, b) => a + b, initialValue)}
+      </b>
     </p>
   );
 };
