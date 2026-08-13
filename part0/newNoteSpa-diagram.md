@@ -8,6 +8,4 @@ sequenceDiagram
     server-->>browser: HTTP status 201 with json response {"message":"note created"}
     deactivate server
 
-
-
 ```
