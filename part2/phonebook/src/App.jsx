@@ -1,19 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import { getAll, create, updateNumber } from "./axios";
+import Notification from "./components/Notification";
 
 function App() {
-  const [persons, setPersons] = useState([
-    { name: "Arto Hellas", number: "040-123456", id: 1 },
-    { name: "Ada Lovelace", number: "39-44-5323523", id: 2 },
-    { name: "Dan Abramov", number: "12-43-234345", id: 3 },
-    { name: "Mary Poppendieck", number: "39-23-6423122", id: 4 },
-  ]);
-
+  const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [number, setNumber] = useState("");
   const [search, setSearch] = useState("");
+  const [message, setMessage] = useState(null);
+  const [messageType, setMessageType] = useState(null);
 
   const personsToShow =
     search === ""
@@ -35,18 +33,63 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    let isExists = persons.find(({ name }) => name === newName);
+    const isExists = persons.find(({ name }) => name === newName);
     if (isExists) {
-      alert(`${newName} is already added to phonebook`);
+      if (
+        confirm(
+          `${newName} is already added to phonebook, replace the old  number with a new one?`,
+        )
+      ) {
+        updateNumber(isExists.id, { name: newName, number }).then(
+          (returnedPerson) =>
+            setPersons(
+              persons.map((p) =>
+                p.id === returnedPerson.id ? returnedPerson : p,
+              ),
+            ),
+        );
+      }
     } else {
-      setPersons([...persons, { name: newName, number }]);
-      setNewName("");
-      setNumber("");
+      create({ name: newName, number })
+        .then((returnedPerson) => {
+          (setPersons(persons.concat(returnedPerson)), setNewName(""));
+          setNumber("");
+          setMessage(`Added ${newName}`);
+          setMessageType("success");
+          setTimeout(() => {
+            setMessage(null);
+            setMessageType(null);
+          }, 5000);
+        })
+        .catch((err) => {
+          console.log(err);
+          setMessage(`Error while adding ${newName}`);
+          setMessageType("error");
+          setTimeout(() => {
+            setMessage(null);
+            setMessageType(null);
+          }, 5000);
+        });
     }
   };
+
+  useEffect(() => {
+    getAll()
+      .then((initialPersons) => setPersons(initialPersons))
+      .catch((err) => {
+        console.log(err);
+        setMessage(`Error while fetching persons`);
+        setMessageType("error");
+        setTimeout(() => {
+          setMessage(null);
+          setMessageType(null);
+        }, 5000);
+      });
+  }, []);
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} type={messageType} />
       <Filter search={search} handleSearchChange={handleSearchChange} />
       <h3>Add a new</h3>
       <PersonForm
@@ -57,7 +100,13 @@ function App() {
         handleNumberChange={handleNumberChange}
       />
       <h3>Numbers</h3>
-      <Persons persons={personsToShow} />
+      <Persons
+        persons={personsToShow}
+        setPersons={setPersons}
+        message={message}
+        setMessage={setMessage}
+        setMessageType={setMessageType}
+      />
     </div>
   );
 }

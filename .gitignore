@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 
+part2/countries/.env
+
 # Production builds
 dist/
 build/
