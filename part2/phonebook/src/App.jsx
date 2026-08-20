@@ -33,21 +33,42 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const isExists = persons.find(({ name }) => name === newName);
+    const isExists = persons.find(
+      ({ name }) => name.toLowerCase() === newName.toLowerCase(),
+    );
     if (isExists) {
       if (
         confirm(
           `${newName} is already added to phonebook, replace the old  number with a new one?`,
         )
       ) {
-        updateNumber(isExists.id, { name: newName, number }).then(
-          (returnedPerson) =>
+        const changedPerson = { ...isExists, number };
+        updateNumber(isExists._id, changedPerson)
+          .then((returnedPerson) => {
+            //doesnt show when changing until refresh
             setPersons(
-              persons.map((p) =>
-                p.id === returnedPerson.id ? returnedPerson : p,
-              ),
-            ),
-        );
+              persons.map((p) => (p._id !== isExists._id ? p : returnedPerson)),
+            );
+            //reset inputs
+            setNewName("");
+            setNumber("");
+            //show notification
+            setMessage(`Updated ${newName} to ${number}`);
+            setMessageType("success");
+            setTimeout(() => {
+              setMessage(null);
+              setMessageType(null);
+            }, 5000);
+          })
+          .catch((err) => {
+            console.log(err);
+            setMessage(err.response.data.error);
+            setMessageType("error");
+            setTimeout(() => {
+              setMessage(null);
+              setMessageType(null);
+            }, 5000);
+          });
       }
     } else {
       create({ name: newName, number })
@@ -63,7 +84,7 @@ function App() {
         })
         .catch((err) => {
           console.log(err);
-          setMessage(`Error while adding ${newName}`);
+          setMessage(err.response.data.error);
           setMessageType("error");
           setTimeout(() => {
             setMessage(null);

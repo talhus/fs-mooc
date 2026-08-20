@@ -6,12 +6,13 @@ const Numbers = ({
   setMessage,
   setMessageType,
 }) => {
-  const handleDelete = (person) => {
+  const handleDelete = (id) => {
+    const person = persons.find((p) => p._id === id);
     const con = confirm(`Delete ${person.name}`);
     if (con) {
-      deletePerson(person.id)
+      deletePerson(id)
         .then(() => {
-          setPersons(persons.filter((p) => p.id !== person.id));
+          setPersons(persons.filter((p) => p._id !== id));
         })
         .catch((err) => {
           console.log(err);
@@ -33,9 +34,9 @@ const Numbers = ({
   return (
     <div>
       {persons.map((person) => (
-        <p key={person.name}>
+        <p key={person._id}>
           {person.name} {person.number}
-          <button onClick={() => handleDelete(person)}>delete</button>
+          <button onClick={() => handleDelete(person._id)}>delete</button>
         </p>
       ))}
     </div>
